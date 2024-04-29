@@ -1,85 +1,49 @@
-const inputAddContactName = document.querySelector('.name');
-const inputAddContactPhone = document.querySelector('.phone');
-const buttonAddContact = document.querySelector('.add-contact button');
-const contactListEl = document.querySelector('.contact-list');
+const app = angular.module('agenda-de-contato', []);
 
-buttonAddContact.addEventListener('click', () => {
-    const name = inputAddContactName.value;
-    const phone = inputAddContactPhone.value;
-    createContact(name, phone);
-});
 
-function deleteContact(id) {
-    fetch(`http://localhost:4444/api/contacts/${id}`, { method: 'DELETE' })
+app.controller("AgendaController", ($scope, $http) =>{
+    $scope.contactName = '';
+    $scope.contactPhone = '';
+    $scope.contactList = [];
+
+    $scope.addContact = () => {
+        if (!$scope.contactName || !$scope.contactPhone){
+            return alert("Digite em todos os campos.")
+        }
+        $http.post("http://localhost:4444/api/contacts", 
+            { name: $scope.contactName, number: $scope.contactPhone })
         .then(() => {
-            getAllContacts();
-        });
-}
-
-function createContact(name, phone) {
-    try {
-        fetch('http://localhost:4444/api/contacts/', {
-            method: 'POST',
-            headers: {
-                'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({ name: name, number: phone })
+            $scope.loadContactList()
+            $scope.contactName = '';
+            $scope.contactPhone = '';
+        }, () => {
+            alert("Aconteceu algum erro")
         })
-            .then(() => {
-                getAllContacts();
-            });
     }
-    catch (err) {
-        console.error(err);
-    }
-    
-}
 
-function updateContact(id, name, phone) {
-    fetch('http://localhost:4444/api/contacts/' + id, {
-        method: 'PATCH',
-        headers: {
-            'Content-Type': 'application/json'
-        },
-        body: JSON.stringify({ name: name, phone: phone })
-    })
+    $scope.deleteContact = (id) => {
+        $http.delete('http://localhost:4444/api/contacts/' + id).then(() =>{
+            $scope.loadContactList()
+        })
+    }
+
+    $scope.updateContact = (id) => {
+        const contact = $scope.contactList.find(contact => contact.id === id)
+
+        $http.patch('http://localhost:4444/api/contacts/' + id, contact)
         .then(() => {
-            getAllContacts();
-        });
-}
+            $scope.loadContactList()
+        })
+    }
 
-function mountContact(contact) {
-    const contactEl = document.createElement('div');
-    const deleteButtonEl = document.createElement('button');
-    const nameEl = document.createElement('p');
-    const phoneEl = document.createElement('p');
-
-    contactEl.className = 'contact';
-    deleteButtonEl.innerHTML = 'deletar';
-    deleteButtonEl.addEventListener('click', () => {
-        deleteContact(contact.id);
-    });
-    nameEl.innerHTML = contact.name;
-    phoneEl.innerHTML = contact.number;
-
-    contactEl.appendChild(nameEl);
-    contactEl.appendChild(phoneEl);
-    contactEl.appendChild(deleteButtonEl);
-
-    contactListEl.appendChild(contactEl);
-}
-
-function getAllContacts() {
-    fetch('http://localhost:4444/api/contacts')
-        .then((response) => response.json())
-        .then(data => {
-            if (!data || data.length === 0) {
-                contactListEl.innerHTML = '<p class="no-contacts active">Nenhum contato cadastrado.</p>';
-            } else {
-                contactListEl.innerHTML = '';
-                data.forEach(mountContact);
-            }
-        });
-}
-
-getAllContacts();
+    $scope.loadContactList = async () => {
+        try {
+            const { data } = await $http.get('http://localhost:4444/api/contacts');
+            $scope.contactList = data;
+            $scope.$apply();
+        } catch (error) {
+            console.error("Erro ao carregar lista de contatos:", error);
+        }
+    }
+    $scope.loadContactList();
+})

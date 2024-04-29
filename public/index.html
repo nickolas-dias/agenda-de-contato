@@ -1,18 +1,40 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" ng-app="agenda-de-contato">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Agenda de Contatos</title>
     <link rel="stylesheet" href="./assets/css/style.css" />
+    <script src="https://ajax.googleapis.com/ajax/libs/angularjs/1.8.2/angular.min.js"></script>
   </head>
-  <body>
+  <body ng-controller="AgendaController">
+    <h1>Agenda de Contatos</h1>
+
     <div class="add-contact">
-      <input type="text" placeholder="Nome" class="name" />
-      <input type="text" placeholder="Telefone" class="phone" />
-      <button>Adicionar Contato</button>
+      <input
+        type="text"
+        ng-model="contactName"
+        placeholder="Nome"
+        class="name"
+      />
+      <input
+        type="text"
+        ng-model="contactPhone"
+        placeholder="Telefone"
+        class="phone"
+      />
+      <button type="button" ng-click="addContact()">Adicionar Contato</button>
     </div>
-    <div class="contact-list"></div>
+    <div class="contact-list">
+      <div class="contact" ng-repeat="contact in contactList">
+        <p>{{contact.name}}</p>
+        <p>{{contact.number}}</p>
+        <button ng-click="deleteContact(contact.id)">deletar</button>
+      </div>
+      <div class="no-contact">
+        <p ng-if="contactList.length === 0">Nenhum contato cadastrado</p>
+      </div>
+    </div>
     <script src="./assets/js/main.js"></script>
   </body>
 </html>
